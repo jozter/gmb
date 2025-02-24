@@ -88,7 +88,8 @@ async def start(message: Message):
 
 @router.message(F.text == "Контейнер заполнен")
 async def container_filled(message: Message):
-    await message.answer("Отправь фотографию контейнера, пожалуйста, а так же можешь добавить текст:")
+    #await message.answer("Отправь фотографию контейнера, пожалуйста, а так же можешь добавить текст:")
+    await message.answer("Работаем над этой функцией ^.^")
 
 ###################     АЙДИ ЧАТА     ########################################################### 
 
