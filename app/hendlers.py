@@ -116,7 +116,7 @@ async def process_photo(message: Message, state: FSMContext):
         ]
     )
 
-    await message.answer("Ты можешь оставить комменатрий или нажать 'Пропустить'.", reply_markup=skip_button)
+    await message.answer("Ты можешь указать контейнер, оставить коммменатрий или нажать 'Пропустить' ⭐️.", reply_markup=skip_button)
     await state.set_state(PhotoState.waiting_for_caption)
 
 # Обрабатываем текстовое сообщение (если пользователь сам вводит текст)
