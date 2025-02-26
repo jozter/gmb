@@ -1,15 +1,21 @@
 from aiogram import Router, Bot, F
 from aiogram.filters import Command
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import StatesGroup, State
 import app.keyboards as kb
 from app.lexicon import lexicone as lx
-from config import TOKEN
+from config import TOKEN, ADMIN_CHAT_ID
 
 router=Router()
 bot = Bot(token=TOKEN)
 
 message_ids = {}
+# Создаём состояния
+class PhotoState(StatesGroup):
+    waiting_for_photo = State()
+    waiting_for_caption = State()
 
 @router.message(Command(commands=["start"]))
 async def start(message: Message):
@@ -86,11 +92,79 @@ async def start(message: Message):
 
 ###################     КНОПКА КОНТЕЙНЕР ЗАПОЛНЕН     ##################################################### 
 
+# Обрабатываем кнопку "Контейнер заполнен"
 @router.message(F.text == "Контейнер заполнен")
-async def container_filled(message: Message):
-    #await message.answer("Отправь фотографию контейнера, пожалуйста, а так же можешь добавить текст:")
-    await message.answer("Работаем над этой функцией ^.^")
+async def container_filled(message: Message, state: FSMContext):
+    await message.answer("Супер! Отправь фотографию контейнера, пожалуйста.")
+    await state.set_state(PhotoState.waiting_for_photo)
 
+# Игнорируем фото, если бот не ждет их
+@router.message(F.photo)
+async def ignore_unexpected_photo(message: Message, state: FSMContext):
+    current_state = await state.get_state()
+    if current_state == PhotoState.waiting_for_photo.state:
+        await process_photo(message, state)
+
+# Обрабатываем фото от пользователя
+async def process_photo(message: Message, state: FSMContext):
+    await state.update_data(photo=message.photo[-1].file_id, user=message.from_user)
+
+    # Инлайн-кнопка "Пропустить"
+    skip_button = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="Пропустить", callback_data="skip_caption")]
+        ]
+    )
+
+    await message.answer("Ты можешь оставить комменатрий или нажать 'Пропустить'.", reply_markup=skip_button)
+    await state.set_state(PhotoState.waiting_for_caption)
+
+# Обрабатываем текстовое сообщение (если пользователь сам вводит текст)
+@router.message(PhotoState.waiting_for_caption, F.text)
+async def process_caption(message: Message, state: FSMContext):
+    data = await state.get_data()
+    photo_id = data['photo']
+    user = data['user']
+
+    # Формируем информацию об отправителе
+    user_info = f"▪️ *Отправитель:*\n"
+    user_info += f"▫️ ID: `{user.id}`\n"
+    if user.username:
+        user_info += f"▫️ @{user.username}\n"
+    if user.full_name:
+        user_info += f"▫️ Имя: {user.full_name}\n"
+
+    caption = f"^.^ Информация по контейнеру\n💬 {message.text}\n\n{user_info}"
+
+    # Отправляем фото и текст в нужный чат
+    await message.bot.send_photo(ADMIN_CHAT_ID, photo=photo_id, caption=caption, parse_mode="Markdown")
+
+    await message.answer("Спасибо тебе за участие! 🩵 ")
+    await state.clear()  # Завершаем состояние
+
+# Обрабатываем нажатие кнопки "Пропустить"
+@router.callback_query(F.data == "skip_caption")
+async def skip_caption(callback_query: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    photo_id = data['photo']
+    user = data['user']
+
+    # Формируем информацию об отправителе
+    user_info = f"▪️ *Отправитель:*\n"
+    user_info += f"▫️ ID: `{user.id}`\n"
+    if user.username:
+        user_info += f"▫️ @{user.username}\n"
+    if user.full_name:
+        user_info += f"▫️ Имя: {user.full_name}\n"
+
+    caption = f"^.^ Информация по контейнеру\n💬 Без комментариев\n\n{user_info}"
+
+    # Отправляем фото без подписи
+    await callback_query.message.bot.send_photo(ADMIN_CHAT_ID, photo=photo_id, caption=caption, parse_mode="Markdown")
+
+    await callback_query.message.answer("Спасибо тебе за участие! 🩵 ")
+    await callback_query.answer()  # Закрываем уведомление
+    await state.clear()  # Завершаем состояние
 ###################     АЙДИ ЧАТА     ########################################################### 
 
 @router.message(Command("chat_id"))
