@@ -1,9 +1,12 @@
 from aiogram import Bot, Dispatcher
-from config import TOKEN
 from app.hendlers import router
 from aiogram.types import BotCommand
+from dotenv import load_dotenv
+import os
 
-bot = Bot(token=TOKEN)
+load_dotenv()
+
+bot = os.getenv("TOKEN")
 dp = Dispatcher()
 
 async def set_main_menu(bot: Bot):

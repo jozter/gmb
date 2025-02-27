@@ -1,4 +1,4 @@
-from aiogram import Router, Bot, F
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.enums import ParseMode
@@ -6,10 +6,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 import app.keyboards as kb
 from app.lexicon import lexicone as lx
-from config import TOKEN, ADMIN_CHAT_ID
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 router=Router()
-bot = Bot(token=TOKEN)
+bot = os.getenv("TOKEN")
+ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
 
 message_ids = {}
 # Создаём состояния
