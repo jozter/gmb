@@ -6,8 +6,9 @@ import os
 
 load_dotenv()
 
-bot = os.getenv("TOKEN")
 dp = Dispatcher()
+TOKEN = os.getenv("TOKEN")
+bot = Bot(token=TOKEN)
 
 async def set_main_menu(bot: Bot):
     main_menu_commands = [
