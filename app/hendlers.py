@@ -170,9 +170,18 @@ async def skip_caption(callback_query: CallbackQuery, state: FSMContext):
     await callback_query.message.answer("Спасибо тебе за участие! 🩵 ")
     await callback_query.answer()  # Закрываем уведомление
     await state.clear()  # Завершаем состояние
+    
 ###################     АЙДИ ЧАТА     ########################################################### 
 
 @router.message(Command("chat_id"))
 async def cmd_chat_id(message: Message):
     await message.answer(f"ID этого чата: {message.chat.id}")
 
+###################     АЙДИ ТРЕДА     ########################################################### 
+
+@router.message(F.text == "Please, скажи мне id этой темы")
+async def get_thread_id(message: Message):
+    if message.message_thread_id:
+        await message.reply(f"ID этой темы: {message.message_thread_id}")
+    else:
+        await message.reply("Это сообщение не в теме, здесь нет ID.")
