@@ -14,6 +14,7 @@ load_dotenv()
 router=Router()
 TOKEN = os.getenv("TOKEN")
 ADMIN_CHAT_ID = os.getenv("ADMIN_CHAT_ID")
+THREAD_ID = os.getenv("THREAD_ID")
 bot = Bot(token=TOKEN)
 
 message_ids = {}
@@ -142,7 +143,7 @@ async def process_caption(message: Message, state: FSMContext):
     caption = f"^.^ Информация по контейнеру\n💬 {message.text}\n\n{user_info}"
 
     # Отправляем фото и текст в нужный чат
-    await message.bot.send_photo(ADMIN_CHAT_ID, photo=photo_id, caption=caption, parse_mode="Markdown")
+    await message.bot.send_photo(ADMIN_CHAT_ID, message_thread_id=THREAD_ID, photo=photo_id, caption=caption, parse_mode="Markdown")
 
     await message.answer("Спасибо тебе за участие! 🩵 ")
     await state.clear()  # Завершаем состояние
